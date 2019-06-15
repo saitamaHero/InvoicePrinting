@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.print.PrinterInfo;
 
 import com.datecs.api.printer.Printer;
 import com.datecs.api.printer.ProtocolAdapter;
@@ -15,9 +16,10 @@ import java.util.UUID;
 
 public class PrinterHandler extends Handler implements Printer.ConnectionListener {
     public static final String CHARSET_ISO_8859_1 = "ISO-8859-1";
+    public static final String EXTRA_PRINTER_INFORMATION = PrinterHandler.class.getName()  + ".EXTRA_PRINTER_INFORMATION";
     public static final int FLAG_CONNECT = 1;
     public static final int FLAG_PRINTER_STATUS = 2;
-
+    public static final int FLAG_DISCONNECT = 4;
 
     public static final int STATUS_CONNECTED = -1;
     public static final int STATUS_DISCONNECTED = 0;
@@ -52,8 +54,16 @@ public class PrinterHandler extends Handler implements Printer.ConnectionListene
                 if(connect((BluetoothDevice) msg.obj)){
                     sendPrinterStatus(STATUS_CONNECTED);
                 }
-
                 break;
+
+            case FLAG_DISCONNECT:
+                if(mBluetoothSocket.isConnected()){
+                    disconnect();
+                }
+
+                sendPrinterStatus(STATUS_DISCONNECTED);
+                break;
+
 
         }
     }
@@ -90,6 +100,14 @@ public class PrinterHandler extends Handler implements Printer.ConnectionListene
         }
 
         return true;
+    }
+
+    public void disconnect(){
+        if(mPrinter == null){
+            return;
+        }
+
+        mPrinter.close();
     }
 
     @Override
